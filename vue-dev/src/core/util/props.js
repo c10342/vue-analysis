@@ -18,36 +18,47 @@ type PropOptions = {
   validator: ?Function
 };
 
-export function validateProp (
+export function validateProp(
+  // 属性名
   key: string,
+  // 规范后的prop选项
   propOptions: Object,
+  // 父组件传入的真实props数据
   propsData: Object,
+  // 当前vm实例
   vm?: Component
 ): any {
   const prop = propOptions[key]
+  // 父组件是否传入了该属性值，true就是没传入
   const absent = !hasOwn(propsData, key)
+  // 父组件传入的真实值
   let value = propsData[key]
-  // boolean casting
+  // 判断是否存在boolean类型
   const booleanIndex = getTypeIndex(Boolean, prop.type)
   if (booleanIndex > -1) {
     if (absent && !hasOwn(prop, 'default')) {
+      // 父组件没有传入，并且也没有默认值，设置为false
       value = false
     } else if (value === '' || value === hyphenate(key)) {
-      // only cast empty string / same name to boolean if
-      // boolean has higher priority
+      // 空值或者属性值个属性名相等
+      // type:[Boolean,String]
       const stringIndex = getTypeIndex(String, prop.type)
       if (stringIndex < 0 || booleanIndex < stringIndex) {
+        // booleanIndex < stringIndex,指boolean的优先级比string高
+        // stringIndex < 0不存在string类型
         value = true
       }
     }
   }
-  // check default value
+  // 父组件没传入值就是undefined
   if (value === undefined) {
+    // 获取默认值
     value = getPropDefaultValue(vm, prop, key)
     // since the default value is a fresh copy,
     // make sure to observe it.
     const prevShouldObserve = shouldObserve
     toggleObserving(true)
+    // 默认值转化为响应式数据
     observe(value)
     toggleObserving(prevShouldObserve)
   }
@@ -56,6 +67,7 @@ export function validateProp (
     // skip validation for weex recycle-list child component props
     !(__WEEX__ && isObject(value) && ('@binding' in value))
   ) {
+    // 校验属性值和要求的类型是否匹配
     assertProp(prop, key, value, vm, absent)
   }
   return value
@@ -65,13 +77,14 @@ export function validateProp (
  * Get the default value of a prop.
  */
 function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): any {
-  // no default, return undefined
+  // 没有默认值就返回undefined
   if (!hasOwn(prop, 'default')) {
     return undefined
   }
   const def = prop.default
   // warn against non-factory defaults for Object & Array
   if (process.env.NODE_ENV !== 'production' && isObject(def)) {
+    // 对象或者数组必须通过工厂函数返回
     warn(
       'Invalid default value for prop "' + key + '": ' +
       'Props with type Object/Array must use a factory function ' +
@@ -79,32 +92,36 @@ function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): a
       vm
     )
   }
-  // the raw prop value was also undefined from previous render,
-  // return previous default value to avoid unnecessary watcher trigger
+  // vm.$options.propsData[key]父组件没有传值
+  // vm._props[key]有该属性的值，则就是默认值
   if (vm && vm.$options.propsData &&
     vm.$options.propsData[key] === undefined &&
     vm._props[key] !== undefined
   ) {
     return vm._props[key]
   }
-  // call factory function for non-Function types
-  // a value is Function if its prototype is function even across different execution context
+  // 默认值是一个函数，并且type类型不是Function，说明是工厂函数，
+  // 需要执行一下，获取返回来的值
   return typeof def === 'function' && getType(prop.type) !== 'Function'
     ? def.call(vm)
     : def
 }
 
 /**
- * Assert whether a prop is valid.
+//  * 校验父组件传来的真是属性是否与prop的type类型匹配
  */
 function assertProp (
   prop: PropOptions,
+  // props选项的key
   name: string,
+  // 值
   value: any,
   vm: ?Component,
+  // 父组件是否传入了该属性，true表示没有传入
   absent: boolean
 ) {
   if (prop.required && absent) {
+    // 必填项，但是父组件没传
     warn(
       'Missing required prop: "' + name + '"',
       vm
@@ -112,17 +129,26 @@ function assertProp (
     return
   }
   if (value == null && !prop.required) {
+    // 不是必填项，并且值不存在，此时是合法的
     return
   }
   let type = prop.type
+  // 标识校验是否成功，用户没设置type就不用校验了
+  // props:{name:true}这种写法也是要校验的
   let valid = !type || type === true
+  // 保存期望类型的数组
   const expectedTypes = []
   if (type) {
     if (!Array.isArray(type)) {
+      // 先把type转化为数组统一处理
       type = [type]
     }
     for (let i = 0; i < type.length && !valid; i++) {
       const assertedType = assertType(value, type[i], vm)
+    //   {
+    //     vaild:true,       // 表示是否校验成功
+    //     expectedType：'Boolean'   // 表示被校验的类型
+    // }
       expectedTypes.push(assertedType.expectedType || '')
       valid = assertedType.valid
     }
@@ -130,12 +156,14 @@ function assertProp (
 
   const haveExpectedTypes = expectedTypes.some(t => t)
   if (!valid && haveExpectedTypes) {
+    // 校验未通过
     warn(
       getInvalidTypeMessage(name, value, expectedTypes),
       vm
     )
     return
   }
+  // 自定义校验器
   const validator = prop.validator
   if (validator) {
     if (!validator(value)) {

@@ -290,15 +290,22 @@ export function validateComponentName (name: string) {
 }
 
 /**
- * Ensure all props option syntax are normalized into the
- * Object-based format.
+ * 规范化props属性数据
+ * props数据最终都会被转化为如下形式：
+ * props: {
+    name:{
+        type: xxx
+    }
+}
  */
 function normalizeProps (options: Object, vm: ?Component) {
   const props = options.props
   if (!props) return
+  // 存储最终结果
   const res = {}
   let i, val, name
   if (Array.isArray(props)) {
+    // props是数组的情况，type为null
     i = props.length
     while (i--) {
       val = props[i]
@@ -310,14 +317,22 @@ function normalizeProps (options: Object, vm: ?Component) {
       }
     }
   } else if (isPlainObject(props)) {
+    // props是对象的情况
     for (const key in props) {
       val = props[key]
       name = camelize(key)
+      // props: {
+      //   name:String
+      // }
+      // props: {
+      //   name:{type:String}
+      // }
       res[name] = isPlainObject(val)
         ? val
         : { type: val }
     }
   } else if (process.env.NODE_ENV !== 'production') {
+    // 其余情况报错
     warn(
       `Invalid value for option "props": expected an Array or an Object, ` +
       `but got ${toRawType(props)}.`,

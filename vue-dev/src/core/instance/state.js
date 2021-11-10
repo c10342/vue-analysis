@@ -29,6 +29,7 @@ import {
   invokeWithErrorHandling
 } from '../util/index'
 
+// 默认属性描述符
 const sharedPropertyDefinition = {
   enumerable: true,
   configurable: true,
@@ -66,19 +67,24 @@ export function initState (vm: Component) {
   }
 }
 
-function initProps (vm: Component, propsOptions: Object) {
+function initProps(vm: Component, propsOptions: Object) {
+  // 父组件传进来的props数据
   const propsData = vm.$options.propsData || {}
+  // 所有设置了props变量的属性都会保存一份到_props中
   const props = vm._props = {}
-  // cache prop keys so that future props updates can iterate using Array
-  // instead of dynamic object key enumeration.
+  // 缓存props对象中的key，更新的时候只需要遍历keys就可以拿到所有props的key
   const keys = vm.$options._propKeys = []
+  // 判断当前组件是否为根组件
   const isRoot = !vm.$parent
-  // root instance props should be converted
+  // 不是根组件不需要将数据转化为响应式
   if (!isRoot) {
     toggleObserving(false)
   }
+  // 遍历props的键值对
   for (const key in propsOptions) {
+    // 将建名添加到keys中
     keys.push(key)
+    // 校验值
     const value = validateProp(key, propsOptions, propsData, vm)
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
@@ -90,6 +96,7 @@ function initProps (vm: Component, propsOptions: Object) {
           vm
         )
       }
+      // 将key-value添加到_props
       defineReactive(props, key, value, () => {
         if (!isRoot && !isUpdatingChildComponent) {
           warn(
@@ -104,10 +111,9 @@ function initProps (vm: Component, propsOptions: Object) {
     } else {
       defineReactive(props, key, value)
     }
-    // static props are already proxied on the component's prototype
-    // during Vue.extend(). We only need to proxy props defined at
-    // instantiation here.
+    // 如果key不在当前实例的vm上
     if (!(key in vm)) {
+      // 将数据到this上面
       proxy(vm, `_props`, key)
     }
   }
@@ -116,10 +122,12 @@ function initProps (vm: Component, propsOptions: Object) {
 
 function initData (vm: Component) {
   let data = vm.$options.data
+  // 获取data对象
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
   if (!isPlainObject(data)) {
+    // data必须是一个对象,否则警告
     data = {}
     process.env.NODE_ENV !== 'production' && warn(
       'data functions should return an object:\n' +
@@ -135,6 +143,7 @@ function initData (vm: Component) {
   while (i--) {
     const key = keys[i]
     if (process.env.NODE_ENV !== 'production') {
+      // 检查是否跟methods有重名的
       if (methods && hasOwn(methods, key)) {
         warn(
           `Method "${key}" has already been defined as a data property.`,
@@ -143,16 +152,18 @@ function initData (vm: Component) {
       }
     }
     if (props && hasOwn(props, key)) {
+      // 检查是否跟props有重名的
       process.env.NODE_ENV !== 'production' && warn(
         `The data property "${key}" is already declared as a prop. ` +
         `Use prop default value instead.`,
         vm
       )
     } else if (!isReserved(key)) {
+      // 将不以_或者$开头的属性代理到this上面
       proxy(vm, `_data`, key)
     }
   }
-  // observe data
+  // 转化为响应式数据
   observe(data, true /* asRootData */)
 }
 
@@ -176,11 +187,13 @@ function initComputed (vm: Component, computed: Object) {
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
-
+  // 遍历computed每一项
   for (const key in computed) {
     const userDef = computed[key]
+    // 如果是函数，则该函数默认是getter；不是函数说明是一个对象，则获取对象上面的get函数
     const getter = typeof userDef === 'function' ? userDef : userDef.get
     if (process.env.NODE_ENV !== 'production' && getter == null) {
+      // 取值器不存在，报错
       warn(
         `Getter is missing for computed property "${key}".`,
         vm
@@ -188,7 +201,7 @@ function initComputed (vm: Component, computed: Object) {
     }
 
     if (!isSSR) {
-      // create internal watcher for the computed property.
+      // 不是服务端渲染的情况下，创建一个watcher实例，并保存到watchers中
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -203,6 +216,7 @@ function initComputed (vm: Component, computed: Object) {
     if (!(key in vm)) {
       defineComputed(vm, key, userDef)
     } else if (process.env.NODE_ENV !== 'production') {
+      // 如果属性名已经在props，data，methods中，说明重名了
       if (key in vm.$data) {
         warn(`The computed property "${key}" is already defined in data.`, vm)
       } else if (vm.$options.props && key in vm.$options.props) {
@@ -219,13 +233,16 @@ export function defineComputed (
   key: string,
   userDef: Object | Function
 ) {
+  // 非服务端环境才有缓存效果
   const shouldCache = !isServerRendering()
   if (typeof userDef === 'function') {
+    // 函数的情况下默认函数就是取值器
     sharedPropertyDefinition.get = shouldCache
       ? createComputedGetter(key)
       : createGetterInvoker(userDef)
     sharedPropertyDefinition.set = noop
   } else {
+    // 不是函数的情况下，就将它作为对象处理
     sharedPropertyDefinition.get = userDef.get
       ? shouldCache && userDef.cache !== false
         ? createComputedGetter(key)
@@ -234,7 +251,8 @@ export function defineComputed (
     sharedPropertyDefinition.set = userDef.set || noop
   }
   if (process.env.NODE_ENV !== 'production' &&
-      sharedPropertyDefinition.set === noop) {
+    sharedPropertyDefinition.set === noop) {
+    // 用户没设置set情况下，给一个默认的，一旦用户设置了值，就报错
     sharedPropertyDefinition.set = function () {
       warn(
         `Computed property "${key}" was assigned to but it has no setter.`,
@@ -242,6 +260,7 @@ export function defineComputed (
       )
     }
   }
+  // 将计算属性绑定到this上面
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
@@ -271,6 +290,7 @@ function initMethods (vm: Component, methods: Object) {
   for (const key in methods) {
     if (process.env.NODE_ENV !== 'production') {
       if (typeof methods[key] !== 'function') {
+        // methods里面的必须是函数
         warn(
           `Method "${key}" has type "${typeof methods[key]}" in the component definition. ` +
           `Did you reference the function correctly?`,
@@ -278,18 +298,22 @@ function initMethods (vm: Component, methods: Object) {
         )
       }
       if (props && hasOwn(props, key)) {
+        // 检查methods中的方法是否跟props中的重名
         warn(
           `Method "${key}" has already been defined as a prop.`,
           vm
         )
       }
+      // isReserved函数是用来判断字符串是否以_或$开头。
       if ((key in vm) && isReserved(key)) {
+        // 如果实例中有对应的key值，并且以_或者$开头的，提示命名不规范
         warn(
           `Method "${key}" conflicts with an existing Vue instance method. ` +
           `Avoid defining component methods that start with _ or $.`
         )
       }
     }
+    // 将方法代理到this上面
     vm[key] = typeof methods[key] !== 'function' ? noop : bind(methods[key], vm)
   }
 }

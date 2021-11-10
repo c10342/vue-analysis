@@ -59,6 +59,7 @@ export default class Watcher {
     if (options) {
       this.deep = !!options.deep
       this.user = !!options.user
+      // lazy为true表明是一个计算属性
       this.lazy = !!options.lazy
       this.sync = !!options.sync
       this.before = options.before
@@ -68,6 +69,8 @@ export default class Watcher {
     this.cb = cb
     this.id = ++uid // uid for batching
     this.active = true
+    // 记录计算属性的返回值是否有变化，计算属性的缓存就是通过这个属性来判断的
+    // true就是计算属性依赖的数据发生变化
     this.dirty = this.lazy // for lazy watchers
     this.deps = []
     this.newDeps = []
@@ -168,6 +171,8 @@ export default class Watcher {
   update () {
     /* istanbul ignore else */
     if (this.lazy) {
+      // 计算属性
+      // 标识计算属性依赖的数据发生了变化
       this.dirty = true
     } else if (this.sync) {
       this.run()
@@ -208,7 +213,8 @@ export default class Watcher {
    * Evaluate the value of the watcher.
    * This only gets called for lazy watchers.
    */
-  evaluate () {
+  evaluate() {
+    // 重新计算
     this.value = this.get()
     this.dirty = false
   }

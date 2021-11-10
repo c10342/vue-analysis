@@ -47,6 +47,10 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 }
 
 export function initState (vm: Component) {
+  // 给实例添加一个_watchers，用来存储当前实例的所有watcher实例
+  // vue2并不会对所有数据进行拦截检测，不然数据越多，绑定的依赖就越多，会造成内存开销很大
+  // 所以vue2将监测粒度上升到组件层面，所以新增了一个_watchers属性
+  // 当一个数据发生变化时，会通知到组件，由组件内部使用虚拟dom进行数据对比
   vm._watchers = []
   const opts = vm.$options
   if (opts.props) initProps(vm, opts.props)

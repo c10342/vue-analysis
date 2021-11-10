@@ -328,17 +328,25 @@ function normalizeProps (options: Object, vm: ?Component) {
 }
 
 /**
- * Normalize all injections into Object-based format
+ * 转化inject的写法，因为inject有多种写法，需要转化为一种提供给内部使用，规范格式为：
+ * inject:{
+      foo:{
+        from:'foo'
+      }
+    }
+    必须要有from
  */
 function normalizeInject (options: Object, vm: ?Component) {
   const inject = options.inject
   if (!inject) return
   const normalized = options.inject = {}
   if (Array.isArray(inject)) {
+    // 数组的情况
     for (let i = 0; i < inject.length; i++) {
       normalized[inject[i]] = { from: inject[i] }
     }
   } else if (isPlainObject(inject)) {
+    // 对象的情况
     for (const key in inject) {
       const val = inject[key]
       normalized[key] = isPlainObject(val)

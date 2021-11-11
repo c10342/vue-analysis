@@ -10,16 +10,19 @@ export function initExtend (Vue: GlobalAPI) {
   let cid = 1
 
   // 类继承，作用是创建一个继承自vue类的子类，参数接收的是组件选项的对象
+  // extendOptions：用户传入的组件选项参数
   Vue.extend = function (extendOptions: Object): Function {
     // 用户传入的一个包含组件选项的对象参数
     extendOptions = extendOptions || {}
     // 父类，即基础的vue类
     const Super = this
-    // 父类id
+    // 父类id，无论是基础vue类还是继承的vue类，都有一个唯一标识
     const SuperId = Super.cid
+    // 缓存池，用于缓存创建出来的类
     const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
     // 缓存池
     if (cachedCtors[SuperId]) {
+      // 这一步是为了vue性能考虑，反复调用其实返回的是同一个结果
       // 已经创建过的不需要在创建
       return cachedCtors[SuperId]
     }
@@ -30,7 +33,7 @@ export function initExtend (Vue: GlobalAPI) {
       validateComponentName(name)
     }
 
-    // 创建一个vue类的子类
+    // 创建一个vue类的子类，这个类即将要继承基础vue类
     const Sub = function VueComponent (options) {
       this._init(options)
     }
@@ -45,11 +48,12 @@ export function initExtend (Vue: GlobalAPI) {
       Super.options,
       extendOptions
     )
-    // 将父类保存到子类的super字段中
+    // 将父类保存到子类的super字段中，确保子类能拿到父类
     Sub['super'] = Super
 
     // 初始化props
     if (Sub.options.props) {
+      // 初始化props其实就是代理到原型的_props属性
       initProps(Sub)
     }
     // 初始化computed

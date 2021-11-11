@@ -13,13 +13,16 @@ export function initAssetRegisters (Vue: GlobalAPI) {
       definition: Function | Object
     ): Function | Object | void {
       if (!definition) {
+        // 获取指令
         return this.options[type + 's'][id]
       } else {
+        // 注册指令
         /* istanbul ignore if */
         if (process.env.NODE_ENV !== 'production' && type === 'component') {
           validateComponentName(id)
         }
         if (type === 'component' && isPlainObject(definition)) {
+          // 如果对象中不存在name属性，就是用id所谓name属性
           definition.name = definition.name || id
           definition = this.options._base.extend(definition)
         }

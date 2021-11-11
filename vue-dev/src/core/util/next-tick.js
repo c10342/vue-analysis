@@ -7,12 +7,16 @@ import { isIE, isIOS, isNative } from './env'
 
 export let isUsingMicroTask = false
 
+// 回调队列
 const callbacks = []
 let pending = false
 
 function flushCallbacks () {
+  // 解锁
   pending = false
+  // 备份回调函数，防止nexttick里面又使用了nexttick，导致里面的nexttick会进入回调队列
   const copies = callbacks.slice(0)
+  // 清空回调队列
   callbacks.length = 0
   for (let i = 0; i < copies.length; i++) {
     copies[i]()
@@ -40,6 +44,7 @@ let timerFunc
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
+  // 先检查是否支持原生promise
   const p = Promise.resolve()
   timerFunc = () => {
     p.then(flushCallbacks)
@@ -56,6 +61,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   // PhantomJS and iOS 7.x
   MutationObserver.toString() === '[object MutationObserverConstructor]'
 )) {
+  // 然后再检查是否支持MutationObserver
   // Use MutationObserver where native Promise is not available,
   // e.g. PhantomJS, iOS7, Android 4.4
   // (#6466 MutationObserver is unreliable in IE11)
@@ -79,6 +85,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 } else {
   // Fallback to setTimeout.
+  // 都不支持的情况下使用setTimeout
   timerFunc = () => {
     setTimeout(flushCallbacks, 0)
   }
@@ -86,6 +93,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
 
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // 将回调函数推入到回调队列中
   callbacks.push(() => {
     if (cb) {
       try {
@@ -98,11 +106,14 @@ export function nextTick (cb?: Function, ctx?: Object) {
     }
   })
   if (!pending) {
+    // 接收到第一个回调函数的时候就上锁
+    // 上锁，执行异步方法
     pending = true
     timerFunc()
   }
   // $flow-disable-line
   if (!cb && typeof Promise !== 'undefined') {
+    // 没有传入回调函数的，并且支持promise的情况下，返回promise实例
     return new Promise(resolve => {
       _resolve = resolve
     })

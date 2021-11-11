@@ -318,6 +318,18 @@ function initMethods (vm: Component, methods: Object) {
   }
 }
 
+// watch的使用形式可以是数组
+// watch:{
+//   e: [
+//     'handle1',
+//     function handle2 (val, oldVal) {  },
+//     {
+//       handler: function handle3 (val, oldVal) {  },
+//     }
+//   ],
+//   // methods选项中的方法名
+//   b: 'someMethod',
+// }
 function initWatch (vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
@@ -333,17 +345,34 @@ function initWatch (vm: Component, watch: Object) {
 
 function createWatcher (
   vm: Component,
+  // 被监听的属性表达式
   expOrFn: string | Function,
+  // watch选项的每一项值
   handler: any,
+  // 用于传递给vm.$watch的选项对象
   options?: Object
 ) {
   if (isPlainObject(handler)) {
+    //   watch: {
+    //     c: {
+    //         handler: function (val, oldVal) { /* ... */ },
+    // 		deep: true
+    //     }
+    // }
     options = handler
     handler = handler.handler
   }
   if (typeof handler === 'string') {
+  //   watch: {
+  //     // methods选项中的方法名
+  //     b: 'someMethod',
+  // }
     handler = vm[handler]
   }
+  // 既不是对象，也不是字符串，则认为是函数
+  // expOrFn:表达式
+  // handler：回调函数
+  // options：侦听选项
   return vm.$watch(expOrFn, handler, options)
 }
 
@@ -380,9 +409,18 @@ export function stateMixin (Vue: Class<Component>) {
   ): Function {
     const vm: Component = this
     if (isPlainObject(cb)) {
+      // 传入的回调函数是一个对象
+    //   vm.$watch(
+    //     'a.b.c',
+    //     {
+    //         handler: function (val, oldVal) { /* ... */ },
+    //         deep: true
+    //     }
+    // )
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
+    // user字段是用来区分用户创建的watcher和vue内部创建的watcher实例
     options.user = true
     const watcher = new Watcher(vm, expOrFn, cb, options)
     if (options.immediate) {
@@ -391,6 +429,7 @@ export function stateMixin (Vue: Class<Component>) {
       invokeWithErrorHandling(cb, vm, [watcher.value], vm, info)
       popTarget()
     }
+    // 取消观察函数
     return function unwatchFn () {
       watcher.teardown()
     }

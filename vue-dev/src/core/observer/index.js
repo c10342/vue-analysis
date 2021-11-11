@@ -208,19 +208,28 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
-    warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
+    // target为原始类型或者undefined、null，报错
+    warn(`Cannot set reactive property on undefined, null, or primitive value: ${target}`)
   }
+  // isValidArrayIndex(key)判断索引是否为有效值
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 数组的情况
+
+    // 对比2个索引的，取最大的索引作为数组的长度
     target.length = Math.max(target.length, key)
+    // 使用splice方法添加数据，因为splice方法被重写了，会把元素自动转化为响应式
     target.splice(key, 1, val)
     return val
   }
+  // 不是数组就当做对象处理
   if (key in target && !(key in Object.prototype)) {
+    // 如果key已经在target上了，直接赋值即可
     target[key] = val
     return val
   }
-  const ob = (target: any).__ob__
+  const ob = target.__ob__
   if (target._isVue || (ob && ob.vmCount)) {
+    // 如果target是vue实例或者vue实例的根数据独享，则报错，退出程序
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
       'at runtime - declare it upfront in the data option.'
@@ -228,10 +237,14 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     return val
   }
   if (!ob) {
+    // ob不存在，说明target不是一个响应式数据
+    // 直接赋值即可
     target[key] = val
     return val
   }
+  // 调用defineReactive方法添加新属性，并转化为响应式数据
   defineReactive(ob.value, key, val)
+  // 通知更新
   ob.dep.notify()
   return val
 }
@@ -243,14 +256,17 @@ export function del (target: Array<any> | Object, key: any) {
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
-    warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
+    // target不存在或者是原始值的情况下，报错
+    warn(`Cannot delete reactive property on undefined, null, or primitive value: ${target}`)
   }
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 有效key则使用splice进行删除
     target.splice(key, 1)
     return
   }
-  const ob = (target: any).__ob__
+  const ob = target.__ob__
   if (target._isVue || (ob && ob.vmCount)) {
+    // 不能是vue实例或者是vue实例的根数据
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid deleting properties on a Vue instance or its root $data ' +
       '- just set it to null.'
@@ -258,12 +274,15 @@ export function del (target: Array<any> | Object, key: any) {
     return
   }
   if (!hasOwn(target, key)) {
+    // 本来就不存在于target对象中的，就不用删除
     return
   }
+  // 删除属性值
   delete target[key]
   if (!ob) {
     return
   }
+  // 如果是一个响应式的情况下，通知更新
   ob.dep.notify()
 }
 

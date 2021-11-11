@@ -95,8 +95,10 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 
   Vue.prototype.$forceUpdate = function () {
+    // 强迫vue实例更新，注意只更新实例本身和插入到插槽内容的子内容，并不是所有组件
     const vm: Component = this
     if (vm._watcher) {
+      // 组件的watcher实例
       vm._watcher.update()
     }
   }
@@ -104,35 +106,39 @@ export function lifecycleMixin (Vue: Class<Component>) {
   Vue.prototype.$destroy = function () {
     const vm: Component = this
     if (vm._isBeingDestroyed) {
+      // 当前实例正处于被销毁的状态，防止反复执行销毁逻辑
       return
     }
     callHook(vm, 'beforeDestroy')
     vm._isBeingDestroyed = true
-    // remove self from parent
+    // 将当前vue实例从父级实例中移除
     const parent = vm.$parent
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
       remove(parent.$children, vm)
     }
     // teardown watchers
     if (vm._watcher) {
+      // 将自身实例从其他数据的依赖列表中删除
       vm._watcher.teardown()
     }
     let i = vm._watchers.length
     while (i--) {
+      // 移除实例内数据对其他数据的依赖
       vm._watchers[i].teardown()
     }
     // remove reference from data ob
     // frozen object may not have observer.
     if (vm._data.__ob__) {
+      // 移除响应式数据的引用
       vm._data.__ob__.vmCount--
     }
-    // call the last hook...
+    // 表示实例已经被销毁了
     vm._isDestroyed = true
-    // invoke destroy hooks on current rendered tree
+    // 将实例的vnode树设置为null
     vm.__patch__(vm._vnode, null)
     // fire destroyed hook
     callHook(vm, 'destroyed')
-    // turn off all instance listeners.
+    // 移除所有事件监听器
     vm.$off()
     // remove __vue__ reference
     if (vm.$el) {
@@ -153,6 +159,7 @@ export function mountComponent (
 ): Component {
   vm.$el = el
   if (!vm.$options.render) {
+    // 没有渲染函数的情况下会默认给一个渲染函数
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
@@ -172,6 +179,7 @@ export function mountComponent (
       }
     }
   }
+  // 触发beforeMount钩子函数
   callHook(vm, 'beforeMount')
 
   let updateComponent

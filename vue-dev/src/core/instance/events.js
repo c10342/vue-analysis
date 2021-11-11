@@ -55,10 +55,13 @@ export function eventsMixin (Vue: Class<Component>) {
   Vue.prototype.$on = function (event: string | Array<string>, fn: Function): Component {
     const vm: Component = this
     if (Array.isArray(event)) {
+      // 事件名可以是数组，表示订阅多个事件
       for (let i = 0, l = event.length; i < l; i++) {
+        // 递归
         vm.$on(event[i], fn)
       }
     } else {
+      // vm._events为当前实例的事件中心，所有绑定在这个实例的事件都会存储在这个属性上面
       (vm._events[event] || (vm._events[event] = [])).push(fn)
       // optimize hook:event cost by using a boolean flag marked at registration
       // instead of a hash lookup
@@ -75,6 +78,10 @@ export function eventsMixin (Vue: Class<Component>) {
       vm.$off(event, on)
       fn.apply(vm, arguments)
     }
+    // 跟122行对应
+    // once记录的是on函数，不是fn函数。
+    // 如果用户在触发前使用$off注销，但因为没有fn函数的记录（注册的函数被改写了）导致删除失败
+    // 所以需要记录一下原函数，off内部删除的时候会判断`cb === fn || cb.fn === fn`
     on.fn = fn
     vm.$on(event, on)
     return vm
@@ -84,11 +91,13 @@ export function eventsMixin (Vue: Class<Component>) {
     const vm: Component = this
     // all
     if (!arguments.length) {
+      // 参数为空，表示清空所有事件
       vm._events = Object.create(null)
       return vm
     }
     // array of events
     if (Array.isArray(event)) {
+      // 多个事件
       for (let i = 0, l = event.length; i < l; i++) {
         vm.$off(event[i], fn)
       }
@@ -97,9 +106,11 @@ export function eventsMixin (Vue: Class<Component>) {
     // specific event
     const cbs = vm._events[event]
     if (!cbs) {
+      // 不存在对应事件，直接返回
       return vm
     }
     if (!fn) {
+      // 只传入了事件名，就把该事件名的所有清空
       vm._events[event] = null
       return vm
     }
@@ -109,6 +120,7 @@ export function eventsMixin (Vue: Class<Component>) {
     while (i--) {
       cb = cbs[i]
       if (cb === fn || cb.fn === fn) {
+        // 移除事件
         cbs.splice(i, 1)
         break
       }
@@ -130,9 +142,11 @@ export function eventsMixin (Vue: Class<Component>) {
         )
       }
     }
+    // 获取对应事件
     let cbs = vm._events[event]
     if (cbs) {
       cbs = cbs.length > 1 ? toArray(cbs) : cbs
+      // 获取参数
       const args = toArray(arguments, 1)
       const info = `event handler for "${event}"`
       for (let i = 0, l = cbs.length; i < l; i++) {

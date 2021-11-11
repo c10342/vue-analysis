@@ -117,8 +117,8 @@ export default class Watcher {
         throw e
       }
     } finally {
-      // "touch" every property so they are all tracked as
-      // dependencies for deep watching
+      // 实现深度监听，把对象内部所有值递归读一遍
+      // 那么这个实例就会被加入到对象内所有制值的依赖列表中
       if (this.deep) {
         traverse(value)
       }
@@ -230,7 +230,9 @@ export default class Watcher {
   }
 
   /**
-   * Remove self from all dependencies' subscriber list.
+   * 把当前实例从依赖的数据列表中移除
+   * 
+   * 比如：观察了数据a和数据b，那么它就依赖了数据a和数据b，那么这个watcher实例就存在于数据a和数据b的依赖管理器depA和depB中，同时watcher实例的deps属性中也记录了这两个依赖管理器，即this.deps=[depA,depB]，
    */
   teardown () {
     if (this.active) {

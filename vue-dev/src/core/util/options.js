@@ -456,25 +456,34 @@ export function mergeOptions (
  * Resolve an asset.
  * This function is used because child instances need access
  * to assets defined in its ancestor chain.
+ * 
+ * 获取directives，filters等数据
  */
-export function resolveAsset (
+export function resolveAsset(
+  // $options
   options: Object,
+  // 查找的类型，filters
   type: string,
   id: string,
   warnMissing?: boolean
 ): any {
   /* istanbul ignore if */
   if (typeof id !== 'string') {
+    // 非字符串就退出程序
     return
   }
+  // 全局的东西，filters，component等，通过合并到配置后，所有vue实例都会有全局的东西
   const assets = options[type]
-  // check local registration variations first
+  // 从本地注册中查找
+  // 先检查自身时候存在
   if (hasOwn(assets, id)) return assets[id]
+  // 转化为驼峰再次查找
   const camelizedId = camelize(id)
   if (hasOwn(assets, camelizedId)) return assets[camelizedId]
+  // 将首字母转化为大写再次查找
   const PascalCaseId = capitalize(camelizedId)
   if (hasOwn(assets, PascalCaseId)) return assets[PascalCaseId]
-  // fallback to prototype chain
+  // 从原型链中查找
   const res = assets[id] || assets[camelizedId] || assets[PascalCaseId]
   if (process.env.NODE_ENV !== 'production' && warnMissing && !res) {
     warn(

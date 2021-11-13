@@ -98,6 +98,7 @@ const componentVNodeHooks = {
 
 const hooksToMerge = Object.keys(componentVNodeHooks)
 
+// 关键三步：构造子类构造函数，安装组件钩子函数，实例化vnode
 export function createComponent (
   Ctor: Class<Component> | Function | Object | void,
   data: ?VNodeData,
@@ -109,15 +110,18 @@ export function createComponent (
     return
   }
 
+  // baseCtor实际上就是vue
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
+  // 构造子类构造函数
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }
 
   // if at this stage it's not a constructor or an async component factory,
   // reject.
+  // 异步组件是一个函数
   if (typeof Ctor !== 'function') {
     if (process.env.NODE_ENV !== 'production') {
       warn(`Invalid Component definition: ${String(Ctor)}`, context)
@@ -126,14 +130,17 @@ export function createComponent (
   }
 
   // async component
+  // 异步组件。
   let asyncFactory
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor)
     if (Ctor === undefined) {
+      // 第一次执行resolveAsyncComponent，除非使用高级异步组件0delay去创建一个loading组件，否则都是返回undefined
       // return a placeholder node for async component, which is rendered
       // as a comment node but preserves all the raw information for the node.
       // the information will be used for async server-rendering and hydration.
+      // 创建一个注释节点作为占位符
       return createAsyncPlaceholder(
         asyncFactory,
         data,
@@ -148,6 +155,7 @@ export function createComponent (
 
   // resolve constructor options in case global mixins are applied after
   // component constructor creation
+  // Ctor可能是loading，error或者是成功加载的异步组件
   resolveConstructorOptions(Ctor)
 
   // transform component v-model data into props & events
@@ -183,9 +191,11 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+  // 安装组件钩子函数
   installComponentHooks(data)
 
   // return a placeholder vnode
+  // 实例化vnode
   const name = Ctor.options.name || tag
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,

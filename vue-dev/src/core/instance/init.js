@@ -13,6 +13,7 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
+  // vue初始化的时候主要有：合并配置，初始化生命周期，初始化事件中心，初始化渲染，初始化data，props，computed，watcher等
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
     // 唯一标识
@@ -43,6 +44,24 @@ export function initMixin (Vue: Class<Component>) {
         options || {},
         vm
       )
+      // 合并之后
+      // vm.$options = {
+      //   components: { },
+      //   created: [
+      //     function created() {
+      //       console.log('parent created')
+      //     }
+      //   ],
+      //   directives: { },
+      //   filters: { },
+      //   _base: function Vue(options) {
+      //     // ...
+      //   },
+      //   el: "#app",
+      //   render: function (h) {
+      //     //...
+      //   }
+      // }
     }
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {

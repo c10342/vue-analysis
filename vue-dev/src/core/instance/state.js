@@ -77,6 +77,7 @@ function initProps(vm: Component, propsOptions: Object) {
   // 判断当前组件是否为根组件
   const isRoot = !vm.$parent
   // 不是根组件不需要将数据转化为响应式
+  // 根组件的props代理发生在vue.extend中
   if (!isRoot) {
     toggleObserving(false)
   }
@@ -88,6 +89,7 @@ function initProps(vm: Component, propsOptions: Object) {
     const value = validateProp(key, propsOptions, propsData, vm)
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
+      // 检查key是否为html的保留属性
       const hyphenatedKey = hyphenate(key)
       if (isReservedAttribute(hyphenatedKey) ||
           config.isReservedAttr(hyphenatedKey)) {

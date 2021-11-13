@@ -57,6 +57,7 @@ export default class Watcher {
     vm._watchers.push(this)
     // options
     if (options) {
+      // 深度观测对象
       this.deep = !!options.deep
       this.user = !!options.user
       // lazy为true表明是一个计算属性
@@ -72,8 +73,13 @@ export default class Watcher {
     // 记录计算属性的返回值是否有变化，计算属性的缓存就是通过这个属性来判断的
     // true就是计算属性依赖的数据发生变化
     this.dirty = this.lazy // for lazy watchers
+    // deps，newDeps 表示watcher实例持有的dep实例数组
+    // 因为每次数据变化都会重新render，那么数据就被给再次出发getters，所以需要2个dep实例数组
+    // newDeps 表示新添加的dep实例数组
+    // deps表示上一次添加的dep实例数组
     this.deps = []
     this.newDeps = []
+    // depIds，newDepIds表示deps，newDeps的id
     this.depIds = new Set()
     this.newDepIds = new Set()
     this.expression = process.env.NODE_ENV !== 'production'
@@ -122,7 +128,7 @@ export default class Watcher {
       if (this.deep) {
         traverse(value)
       }
-      // 删除全局唯一的对象
+      // 恢复到上一个状态
       popTarget()
       this.cleanupDeps()
     }
@@ -134,6 +140,7 @@ export default class Watcher {
    */
   addDep (dep: Dep) {
     const id = dep.id
+    // 确保不会重复添加
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
@@ -145,15 +152,21 @@ export default class Watcher {
 
   /**
    * Clean up for dependency collection.
+   * 重新渲染的时候需要对比新旧deps依赖，移除不在需要的依赖
+   * v-if的情况，满足a就会渲染a，此时改变条件，a不渲染，渲染b，如果没有移除a依赖，那么，修改b的数据后，也会通知a的回调，造成浪费
    */
   cleanupDeps () {
     let i = this.deps.length
     while (i--) {
       const dep = this.deps[i]
       if (!this.newDepIds.has(dep.id)) {
+        // 旧deps有的，新的deps没有，说明这个依赖不在需要了，则删除
         dep.removeSub(this)
       }
     }
+    // 交换depIds和newDepIds
+    // newDeps和deps也需要交换
+    // 然后清空newDeps和newDepIds
     let tmp = this.depIds
     this.depIds = this.newDepIds
     this.newDepIds = tmp
@@ -196,6 +209,7 @@ export default class Watcher {
         isObject(value) ||
         this.deep
       ) {
+        // 新旧值不等，新值是对象，deep模式的情况下，执行回调
         // set new value
         const oldValue = this.value
         this.value = value

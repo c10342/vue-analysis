@@ -45,9 +45,13 @@ export function createElement (
 }
 
 export function _createElement (
+  // vnode的上下文环境
   context: Component,
+  // 标签，可以是字符，也可以是一个component
   tag?: string | Class<Component> | Function | Object,
+  // vnode的数据
   data?: VNodeData,
+  // vnode的子节点
   children?: any,
   normalizationType?: number
 ): VNode | Array<VNode> {
@@ -99,6 +103,7 @@ export function _createElement (
     if (config.isReservedTag(tag)) {
       // platform built-in elements
       if (process.env.NODE_ENV !== 'production' && isDef(data) && isDef(data.nativeOn) && data.tag !== 'component') {
+        // native修饰符只能用在component组件
         warn(
           `The .native modifier for v-on is only valid on components but it was used on <${tag}>.`,
           context

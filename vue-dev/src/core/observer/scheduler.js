@@ -24,6 +24,7 @@ let index = 0
 
 /**
  * Reset the scheduler's state.
+ * 回复状态
  */
 function resetSchedulerState () {
   index = queue.length = activatedChildren.length = 0
@@ -81,6 +82,10 @@ function flushSchedulerQueue () {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+  // 排序原因：
+  // 1、从小到大排序，保证组件的更新由父到子，因为父组件的创建过程先于子
+  // 2、用户自定义watcher优先于渲染watcher,用于自定义watcher在渲染watcher前创建的
+  // 3、如果一个组件在父组件的watcher执行期间被销毁，那么，对应的watcher执行可以被跳过
   queue.sort((a, b) => a.id - b.id)
 
   // do not cache length because more watchers might be pushed
@@ -163,9 +168,11 @@ function callActivatedHooks (queue) {
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
+  // has保证同一个watcher只添加一次
   if (has[id] == null) {
     has[id] = true
     if (!flushing) {
+      // 派发更新的时候，并不会每次数据改变都触发watcher回调，而是吧watcher添加到一个队列，然后再nexttick后执行
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
@@ -178,6 +185,7 @@ export function queueWatcher (watcher: Watcher) {
     }
     // queue the flush
     if (!waiting) {
+      // 上锁，保证调用逻辑只执行一次
       waiting = true
 
       if (process.env.NODE_ENV !== 'production' && !config.async) {

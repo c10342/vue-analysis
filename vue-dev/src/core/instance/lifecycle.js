@@ -63,6 +63,7 @@ export function initLifecycle (vm: Component) {
 }
 
 export function lifecycleMixin (Vue: Class<Component>) {
+  // 把vnode渲染成真实的dom
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
@@ -210,6 +211,7 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  // Watcher2个作用，一是初始化的时候执行回调函数，二是当vm实例中检测的数据发生变化就执行回调函数
   new Watcher(vm, updateComponent, noop, {
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
@@ -219,7 +221,7 @@ export function mountComponent (
   }, true /* isRenderWatcher */)
   hydrating = false
 
-  // vm.$vnode：Vue 实例的父虚拟 Node
+  // vm.$vnode：Vue 实例的父虚拟 Node，为null表示为根vue实例
   if (vm.$vnode == null) {
     // 根实例
     vm._isMounted = true // 标识已经挂载

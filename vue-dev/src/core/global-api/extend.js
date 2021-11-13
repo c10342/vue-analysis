@@ -24,6 +24,7 @@ export function initExtend (Vue: GlobalAPI) {
     if (cachedCtors[SuperId]) {
       // 这一步是为了vue性能考虑，反复调用其实返回的是同一个结果
       // 已经创建过的不需要在创建
+      // 避免多次执行 Vue.extend 的时候对同一个子组件重复构造。
       return cachedCtors[SuperId]
     }
     // 获取组件选项的name字段
@@ -37,6 +38,7 @@ export function initExtend (Vue: GlobalAPI) {
     const Sub = function VueComponent (options) {
       this._init(options)
     }
+    // 原型链继承方式
     // 将父类的原型继承到子类
     Sub.prototype = Object.create(Super.prototype)
     // 修正constructor的指向
@@ -51,7 +53,7 @@ export function initExtend (Vue: GlobalAPI) {
     // 将父类保存到子类的super字段中，确保子类能拿到父类
     Sub['super'] = Super
 
-    // 初始化props
+    // 初始化props，根组件的props是在这里进行数据劫持的。好处就是不用为每个组件的实例都做一层proxy，这是一种优化手段
     if (Sub.options.props) {
       // 初始化props其实就是代理到原型的_props属性
       initProps(Sub)

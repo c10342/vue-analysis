@@ -13,7 +13,7 @@ export const createCompiler = createCompilerCreator(function baseCompile (
   template: string,
   options: CompilerOptions
 ): CompiledResult {
-  // 模板解析节点：使用正则等方式解析template模板中的指令 class style等数据，行程ast
+  // 模板解析节点：使用正则等方式解析template模板中的指令 class style等数据，形成ast
   const ast = parse(template.trim(), options)
   if (options.optimize !== false) {
     // 优化阶段，遍历ast，找出静态节点，并打上标记

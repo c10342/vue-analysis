@@ -100,6 +100,7 @@ export default {
 
     // warn multiple elements
     if (process.env.NODE_ENV !== 'production' && children.length > 1) {
+      // transition组件这可能包裹一个元素
       warn(
         '<transition> can only be used on a single element. Use ' +
         '<transition-group> for lists.',
@@ -107,6 +108,7 @@ export default {
       )
     }
 
+    // 处理mode，只支持in-out和out-in
     const mode: string = this.mode
 
     // warn invalid mode
@@ -124,11 +126,13 @@ export default {
     // if this is a component root node and the component's
     // parent container node also has transition, skip.
     if (hasParentTransition(this.$vnode)) {
+      // 组件根节点是transition，并且外面包裹组件的容器是transition，要跳过
       return rawChild
     }
 
     // apply transition data to child
     // use getRealChild() to ignore abstract components e.g. keep-alive
+    // 获取非抽象子节点
     const child: ?VNode = getRealChild(rawChild)
     /* istanbul ignore if */
     if (!child) {

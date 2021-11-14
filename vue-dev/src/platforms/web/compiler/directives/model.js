@@ -23,8 +23,7 @@ export default function model (
   const type = el.attrsMap.type
 
   if (process.env.NODE_ENV !== 'production') {
-    // inputs with type="file" are read only and setting the input's
-    // value will throw an error.
+    // type为file的输入框只能读，所以不能使用v-model
     if (tag === 'input' && type === 'file') {
       warn(
         `<${el.tag} v-model="${value}" type="file">:\n` +
@@ -35,16 +34,21 @@ export default function model (
   }
 
   if (el.component) {
+    // 自定义组件
     genComponentModel(el, value, modifiers)
     // component v-model doesn't need extra runtime
     return false
   } else if (tag === 'select') {
+    // select表单
     genSelect(el, value, modifiers)
   } else if (tag === 'input' && type === 'checkbox') {
+    //checkbox表单
     genCheckboxModel(el, value, modifiers)
   } else if (tag === 'input' && type === 'radio') {
+    // radio表单
     genRadioModel(el, value, modifiers)
   } else if (tag === 'input' || tag === 'textarea') {
+    // textarea表单或者input表单
     genDefaultModel(el, value, modifiers)
   } else if (!config.isReservedTag(tag)) {
     genComponentModel(el, value, modifiers)

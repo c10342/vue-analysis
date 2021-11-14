@@ -59,18 +59,25 @@ export function genElement (el: ASTElement, state: CodegenState): string {
   }
 
   if (el.staticRoot && !el.staticProcessed) {
+    // 静态节点
     return genStatic(el, state)
   } else if (el.once && !el.onceProcessed) {
+    // v-once
     return genOnce(el, state)
   } else if (el.for && !el.forProcessed) {
+    // v-for
     return genFor(el, state)
   } else if (el.if && !el.ifProcessed) {
+    // v-if
     return genIf(el, state)
   } else if (el.tag === 'template' && !el.slotTarget && !state.pre) {
+    // template
     return genChildren(el, state) || 'void 0'
   } else if (el.tag === 'slot') {
+    // 插槽
     return genSlot(el, state)
   } else {
+    // 元素或者组件
     // component or element
     let code
     if (el.component) {

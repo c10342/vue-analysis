@@ -770,6 +770,7 @@ function processAttrs (el) {
     name = rawName = list[i].name
     value = list[i].value
     if (dirRE.test(name)) {
+      // 指令
       // mark element as dynamic
       el.hasBindings = true
       // 修饰符

@@ -73,10 +73,10 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
     if (!prevVnode) {
-      // initial render
+      // 没有旧prevVnode就是第一次渲染
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
-      // updates
+      // 更新
       vm.$el = vm.__patch__(prevVnode, vnode)
     }
     restoreActiveInstance()
@@ -344,6 +344,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
     }
   }
   if (!vm._inactive) {
+    // 已经被停用
     vm._inactive = true
     for (let i = 0; i < vm.$children.length; i++) {
       deactivateChildComponent(vm.$children[i])

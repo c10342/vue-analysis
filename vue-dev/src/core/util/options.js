@@ -34,6 +34,7 @@ const strats = config.optionMergeStrategies
 if (process.env.NODE_ENV !== 'production') {
   strats.el = strats.propsData = function (parent, child, vm, key) {
     if (!vm) {
+      // 只允许vue实例才能有el属性，其他子类构造器不允许有el属性
       warn(
         `option "${key}" can only be used during instance ` +
         'creation with the `new` keyword.'
@@ -75,6 +76,7 @@ function mergeData (to: Object, from: ?Object): Object {
 
 /**
  * Data
+ * data选项合并策略
  */
 export function mergeDataOrFn (
   parentVal: any,
@@ -82,11 +84,14 @@ export function mergeDataOrFn (
   vm?: Component
 ): ?Function {
   if (!vm) {
+    // 子父类
     // in a Vue.extend merge, both should be functions
     if (!childVal) {
+      // 子类不存在data选项，合并结果为父类的
       return parentVal
     }
     if (!parentVal) {
+      // 父类不存在，合并结果为子类的
       return childVal
     }
     // when parentVal & childVal are both present,
@@ -101,6 +106,7 @@ export function mergeDataOrFn (
       )
     }
   } else {
+    // vue实例
     return function mergedInstanceDataFn () {
       // instance merge
       const instanceData = typeof childVal === 'function'
@@ -125,6 +131,7 @@ strats.data = function (
 ): ?Function {
   if (!vm) {
     if (childVal && typeof childVal !== 'function') {
+      // 子类的data必须是一个函数
       process.env.NODE_ENV !== 'production' && warn(
         'The "data" option should be a function ' +
         'that returns a per-instance value in component ' +
@@ -276,12 +283,14 @@ function checkComponents (options: Object) {
 
 export function validateComponentName (name: string) {
   if (!new RegExp(`^[a-zA-Z][\\-\\.0-9_${unicodeRegExp.source}]*$`).test(name)) {
+    // 非法标签
     warn(
       'Invalid component name: "' + name + '". Component names ' +
       'should conform to valid custom element name in html5 specification.'
     )
   }
   if (isBuiltInTag(name) || config.isReservedTag(name)) {
+    // 不能使用vue自身定义的组件名，也不能使用html保留标签
     warn(
       'Do not use built-in or reserved HTML elements as component ' +
       'id: ' + name
@@ -409,13 +418,14 @@ export function mergeOptions (
   vm?: Component
 ): Object {
   if (process.env.NODE_ENV !== 'production') {
+    // 检查组件是否符合规范
     checkComponents(child)
   }
 
   if (typeof child === 'function') {
     child = child.options
   }
-
+  // props,inject,directive的校验和规范化
   normalizeProps(child, vm)
   normalizeInject(child, vm)
   normalizeDirectives(child)
@@ -424,10 +434,13 @@ export function mergeOptions (
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
+  // 针对vue.extends扩展的子类构造器
   if (!child._base) {
+    // extends
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
     }
+    // mixins
     if (child.mixins) {
       for (let i = 0, l = child.mixins.length; i < l; i++) {
         parent = mergeOptions(parent, child.mixins[i], vm)
@@ -445,8 +458,10 @@ export function mergeOptions (
       mergeField(key)
     }
   }
-  function mergeField (key) {
+  function mergeField(key) {
+    // 拿到各自选择指定的选项配置，如果没有就用默认配置
     const strat = strats[key] || defaultStrat
+    // 执行各自的合并策略
     options[key] = strat(parent[key], child[key], vm, key)
   }
   return options

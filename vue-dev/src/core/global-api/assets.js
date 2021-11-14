@@ -24,11 +24,13 @@ export function initAssetRegisters (Vue: GlobalAPI) {
         if (type === 'component' && isPlainObject(definition)) {
           // 如果对象中不存在name属性，就是用id所谓name属性
           definition.name = definition.name || id
+          // Vue.extend() 创建子组件，返回子类构造器
           definition = this.options._base.extend(definition)
         }
         if (type === 'directive' && typeof definition === 'function') {
           definition = { bind: definition, update: definition }
         }
+        // 添加到options全局配置
         this.options[type + 's'][id] = definition
         return definition
       }

@@ -40,10 +40,11 @@ const componentVNodeHooks = {
       !vnode.componentInstance._isDestroyed &&
       vnode.data.keepAlive
     ) {
-      // kept-alive components, treat as a patch
+      // kept-alive缓存的组件，直接走prepatch生命周期
       const mountedNode: any = vnode // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
+      // 创建vnode，并挂载
       const child = vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
         activeInstance
@@ -88,8 +89,10 @@ const componentVNodeHooks = {
     const { componentInstance } = vnode
     if (!componentInstance._isDestroyed) {
       if (!vnode.data.keepAlive) {
+        // 没有被缓存的组件直接调用$destroy进行销毁
         componentInstance.$destroy()
       } else {
+        // keep-alive缓存组件触发deactivated事件
         deactivateChildComponent(componentInstance, true /* direct */)
       }
     }
@@ -114,7 +117,7 @@ export function createComponent (
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
-  // 构造子类构造函数
+  // 构造子类构造函数，局部注册的的组件
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }
@@ -156,6 +159,7 @@ export function createComponent (
   // resolve constructor options in case global mixins are applied after
   // component constructor creation
   // Ctor可能是loading，error或者是成功加载的异步组件
+  // 构造器配置合并
   resolveConstructorOptions(Ctor)
 
   // transform component v-model data into props & events

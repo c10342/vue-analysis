@@ -71,9 +71,12 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   Vue.options._base = Vue
   // 把内置组件扩展到Vue.options.components，keep-alive，transition，transition-group，这也是为什么不需要注册的原因
   extend(Vue.options.components, builtInComponents)
-
+  // Vue.use
   initUse(Vue)
+  // Vue.mixin
   initMixin(Vue)
+  // Vue.extend
   initExtend(Vue)
+  // Vue.component,vue.directive, Vue.filter
   initAssetRegisters(Vue)
 }

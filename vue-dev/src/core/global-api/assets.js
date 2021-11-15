@@ -3,6 +3,9 @@
 import { ASSET_TYPES } from 'shared/constants'
 import { isPlainObject, validateComponentName } from '../util/index'
 
+  // 'component',
+  // 'directive',
+  // 'filter'
 export function initAssetRegisters (Vue: GlobalAPI) {
   /**
    * Create asset registration methods.
@@ -13,7 +16,7 @@ export function initAssetRegisters (Vue: GlobalAPI) {
       definition: Function | Object
     ): Function | Object | void {
       if (!definition) {
-        // 获取指令
+        // 获取资源
         return this.options[type + 's'][id]
       } else {
         // 注册指令

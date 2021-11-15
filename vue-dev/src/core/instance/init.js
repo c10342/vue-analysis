@@ -28,13 +28,14 @@ export function initMixin (Vue: Class<Component>) {
       mark(startTag)
     }
 
-    // 避免被数据劫持
+    // 标识是vue实例，避免被数据劫持
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
+      // 组件的合并策略
       initInternalComponent(vm, options)
     } else {
       // 用户传递的options，当前构造函数的options，父级构造函数的options
@@ -65,17 +66,18 @@ export function initMixin (Vue: Class<Component>) {
     }
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
+      // 这个initProxy是代理vm上面的数据，数据被设置之后，会做相应的检查，不符合要求的会报错警告
       initProxy(vm)
     } else {
       vm._renderProxy = vm
     }
     // expose real self
     vm._self = vm
-    // 初始化生命周期
+    // 初始化生命周期：挂载一些属性，$parent,$root,$children等
     initLifecycle(vm)
-    // 初始化事件
+    // 初始化事件相关：将父组件向子组件注册的事件注册到子组件的实例中
     initEvents(vm)
-    // 初始化渲染
+    // 初始化渲染相关的：$slots，$scopedSlots，createElement，$attrs，$listeners等数据
     initRender(vm)
     // 调用生命周期函数
     callHook(vm, 'beforeCreate')

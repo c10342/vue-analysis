@@ -21,16 +21,23 @@ import platformComponents from './components/index'
 
 // install platform specific utils
 Vue.config.mustUseProp = mustUseProp
+// 是否为html标签
 Vue.config.isReservedTag = isReservedTag
+// 是否为class或者是style属性
 Vue.config.isReservedAttr = isReservedAttr
+// 获取标签名命名空间
 Vue.config.getTagNamespace = getTagNamespace
+// 是否为位未知标签
 Vue.config.isUnknownElement = isUnknownElement
 
 // install platform runtime directives & components
+// 添加v-model和v-show指令
 extend(Vue.options.directives, platformDirectives)
+// 添加transition和transition-group组件
 extend(Vue.options.components, platformComponents)
 
 // install platform patch function
+// patch函数，服务端环境不需要patch，即为空函数
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
 // hydrating是跟服务端渲染相关的
@@ -45,6 +52,7 @@ Vue.prototype.$mount = function (
 // devtools global hook
 /* istanbul ignore next */
 if (inBrowser) {
+  // 开发者工具相关的
   setTimeout(() => {
     if (config.devtools) {
       if (devtools) {

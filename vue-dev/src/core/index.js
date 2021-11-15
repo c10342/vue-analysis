@@ -6,6 +6,7 @@ import { FunctionalRenderContext } from 'core/vdom/create-functional-component'
 // 初始化全局的静态方法
 initGlobalAPI(Vue)
 
+// $isServer：是否为服务端环境
 Object.defineProperty(Vue.prototype, '$isServer', {
   get: isServerRendering
 })

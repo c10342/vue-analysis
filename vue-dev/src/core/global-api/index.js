@@ -53,7 +53,8 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     observe(obj)
     return obj
   }
-
+  // 父类构造器的options，每个vue实例都会和这个options参数进行合并
+  // 这样子每个vue实例就会有全局设置的东西，指令，组件等资源
   Vue.options = Object.create(null)
 
   // 挂载下面的api
@@ -69,7 +70,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
 
   // 基类
   Vue.options._base = Vue
-  // 把内置组件扩展到Vue.options.components，keep-alive，transition，transition-group，这也是为什么不需要注册的原因
+  // 把内置组件扩展到Vue.options.components，keep-alive，这也是为什么不需要注册的原因
   extend(Vue.options.components, builtInComponents)
   // Vue.use
   initUse(Vue)

@@ -85,10 +85,11 @@ export default class Watcher {
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
       : ''
-    // parse expression for getter
+    // watche的时候是表达式路径字符串，computed的时候是个函数
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
+      // 通过闭包，返回一个函数，该函数是根据表达式路径获取vm的值
       this.getter = parsePath(expOrFn)
       if (!this.getter) {
         this.getter = noop
@@ -100,6 +101,9 @@ export default class Watcher {
         )
       }
     }
+    // 如果是compute先不读取值，等到真正被是用到了在读取
+    // 如果是普通的watcher，需要立刻读取值，这样才能让数据收集到依赖,
+    // watcher需要立刻读取值是因为，有可能用户只设置值，不读取值，那这样子数据就收集不到依赖，从而无法进行监听数据的改变
     this.value = this.lazy
       ? undefined
       : this.get()
@@ -118,18 +122,20 @@ export default class Watcher {
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
+        // 用户设置的watcher监听
         handleError(e, vm, `getter for watcher "${this.expression}"`)
       } else {
         throw e
       }
     } finally {
       // 实现深度监听，把对象内部所有值递归读一遍
-      // 那么这个实例就会被加入到对象内所有制值的依赖列表中
+      // 那么这个实例就会被加入到对象内所有数据的依赖列表中
       if (this.deep) {
         traverse(value)
       }
       // 恢复到上一个状态
       popTarget()
+      // 清除无关的依赖，比如v-if相关的依赖
       this.cleanupDeps()
     }
     return value
@@ -137,6 +143,8 @@ export default class Watcher {
 
   /**
    * Add a dependency to this directive.
+   * 
+   * 把watcher添加到dep中，watcher的depIds也记录着自己添加到了那些dep中
    */
   addDep (dep: Dep) {
     const id = dep.id
@@ -230,6 +238,7 @@ export default class Watcher {
   evaluate() {
     // 重新计算
     this.value = this.get()
+    // 从新计算完成之后，需要把标志位置为true，否则就没有缓存效果了
     this.dirty = false
   }
 
@@ -254,10 +263,12 @@ export default class Watcher {
       // this is a somewhat expensive operation so we skip it
       // if the vm is being destroyed.
       if (!this.vm._isBeingDestroyed) {
+        // 移除_watchers上面的自己
         remove(this.vm._watchers, this)
       }
       let i = this.deps.length
       while (i--) {
+        // 通知依赖的数据，把自己给移除掉
         this.deps[i].removeSub(this)
       }
       this.active = false

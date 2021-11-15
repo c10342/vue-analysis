@@ -20,14 +20,19 @@ export function initRender (vm: Component) {
   vm._vnode = null // the root of the child tree
   vm._staticTrees = null // v-once cached trees
   const options = vm.$options
+  // 父vnode
   const parentVnode = vm.$vnode = options._parentVnode // the placeholder node in parent tree
+  // 上下文
   const renderContext = parentVnode && parentVnode.context
+  // 获取普通插槽
   vm.$slots = resolveSlots(options._renderChildren, renderContext)
+  // 作用域插槽， 默认先给个空对象
   vm.$scopedSlots = emptyObject
   // bind the createElement fn to this instance
   // so that we get proper render context inside it.
   // args order: tag, data, children, normalizationType, alwaysNormalize
   // internal version is used by render functions compiled from templates
+  // 挂载createElement到实例上面，vm._c和vm.$createElement都是调用的是createElement,区别在于最后一个参数
   // vm._c，是被模板编译成render函数使用
   vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
   // normalization is always applied for the public version, used in
@@ -37,10 +42,13 @@ export function initRender (vm: Component) {
 
   // $attrs & $listeners are exposed for easier HOC creation.
   // they need to be reactive so that HOCs using them are always updated
+  // 父vnode数据
   const parentData = parentVnode && parentVnode.data
 
   /* istanbul ignore else */
   if (process.env.NODE_ENV !== 'production') {
+    // 将$attrs和$listeners变成响应式数据，并且如果用户手动修改了$attrs和$listeners的值，将会报错警告
+    // defineReactive第四个参数是setter，第五个参数表示是否进行深度监听，true表示不进行深度监听
     defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, () => {
       !isUpdatingChildComponent && warn(`$attrs is readonly.`, vm)
     }, true)
@@ -68,11 +76,13 @@ export function renderMixin (Vue: Class<Component>) {
     return nextTick(fn, this)
   }
 
+  // 生成vnode
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     const { render, _parentVnode } = vm.$options
 
     if (_parentVnode) {
+      // 父节点存在的情况下，获取作用域插槽
       vm.$scopedSlots = normalizeScopedSlots(
         _parentVnode.data.scopedSlots,
         vm.$slots,
@@ -82,6 +92,7 @@ export function renderMixin (Vue: Class<Component>) {
 
     // set parent vnode. this allows render functions to have access
     // to the data on the placeholder node.
+    // 挂载父vnode
     vm.$vnode = _parentVnode
     // render self
     let vnode
@@ -115,6 +126,7 @@ export function renderMixin (Vue: Class<Component>) {
     }
     // return empty vnode in case the render function errored out
     if (!(vnode instanceof VNode)) {
+      // 错误情况下返回一个空的vnode
       if (process.env.NODE_ENV !== 'production' && Array.isArray(vnode)) {
         warn(
           'Multiple root nodes returned from render function. Render function ' +

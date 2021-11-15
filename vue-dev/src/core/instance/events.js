@@ -13,6 +13,7 @@ export function initEvents (vm: Component) {
   vm._events = Object.create(null)
   vm._hasHookEvent = false
   // init parent attached events
+  // 获取父组件v-on监听器
   const listeners = vm.$options._parentListeners
   if (listeners) {
     // 将父组件向子组件注册的事件注册到子组件的实例中
@@ -65,7 +66,11 @@ export function eventsMixin (Vue: Class<Component>) {
       (vm._events[event] || (vm._events[event] = [])).push(fn)
       // optimize hook:event cost by using a boolean flag marked at registration
       // instead of a hash lookup
+      // callHook函数会使用到，外部可以使用this.$on('hook:created')监听生命周期函数
       if (hookRE.test(event)) {
+        // 生命周期函数
+        // _hasHookEvent标示有生命周期事件，vue优化的细节
+        // 只有检测到了注册了hook生命周期事件，callHook才会调用$emit
         vm._hasHookEvent = true
       }
     }
@@ -132,6 +137,7 @@ export function eventsMixin (Vue: Class<Component>) {
     const vm: Component = this
     if (process.env.NODE_ENV !== 'production') {
       const lowerCaseEvent = event.toLowerCase()
+      // 检查事件名称
       if (lowerCaseEvent !== event && vm._events[lowerCaseEvent]) {
         tip(
           `Event "${lowerCaseEvent}" is emitted in component ` +

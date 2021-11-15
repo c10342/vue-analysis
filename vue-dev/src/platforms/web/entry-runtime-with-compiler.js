@@ -34,8 +34,8 @@ Vue.prototype.$mount = function (
   }
 
   const options = this.$options
-  // render函数
   if (!options.render) {
+    // 没有render函数的情况
     let template = options.template
     if (template) {
       // 没有手写render函数的情况下传入template模板
@@ -62,7 +62,7 @@ Vue.prototype.$mount = function (
         return this
       }
     } else if (el) {
-      // template不存在，这根据传入的el参数调用getOuterHTML获取函数获取外部模板
+      // template不存在，根据传入的el参数调用getOuterHTML获取函数获取外部模板
       template = getOuterHTML(el)
     }
     if (template) {

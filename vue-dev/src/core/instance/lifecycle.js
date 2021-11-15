@@ -41,7 +41,7 @@ export function initLifecycle (vm: Component) {
       // 找到第一个不是抽象组件的父级
       parent = parent.$parent
     }
-    // 父亲吧儿子添加进去
+    // 父亲把儿子添加进去
     parent.$children.push(vm)
   }
 
@@ -57,8 +57,11 @@ export function initLifecycle (vm: Component) {
   vm._watcher = null
   vm._inactive = null
   vm._directInactive = false
+  // 是否渲染完毕
   vm._isMounted = false
+  // 是否被销毁了
   vm._isDestroyed = false
+  // 是否开始销毁
   vm._isBeingDestroyed = false
 }
 
@@ -159,6 +162,7 @@ export function mountComponent (
   hydrating?: boolean
 ): Component {
   vm.$el = el
+  // $mount最终需要的是render函数
   if (!vm.$options.render) {
     // 没有渲染函数的情况下会默认给一个渲染函数
     vm.$options.render = createEmptyVNode
@@ -166,6 +170,7 @@ export function mountComponent (
       /* istanbul ignore if */
       if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
         vm.$options.el || el) {
+          // 如果使用的template，但是当前是运行时版本，会报错警告
         warn(
           'You are using the runtime-only build of Vue where the template ' +
           'compiler is not available. Either pre-compile the templates into ' +
@@ -212,9 +217,12 @@ export function mountComponent (
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
   // Watcher2个作用，一是初始化的时候执行回调函数，二是当vm实例中检测的数据发生变化就执行回调函数
+  // 渲染watcher
+  // 如果是渲染watcher，在初始化的时候会把vm._watcher赋值为watcher的实例
   new Watcher(vm, updateComponent, noop, {
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
+        // 如果数据发生了变化，并且组件在渲染状态并且没有销毁，触发beforeUpdate生命周期函数
         callHook(vm, 'beforeUpdate')
       }
     }

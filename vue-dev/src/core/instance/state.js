@@ -100,6 +100,7 @@ function initProps(vm: Component, propsOptions: Object) {
       }
       // 将key-value添加到_props
       defineReactive(props, key, value, () => {
+        // 禁止组件修改props值
         if (!isRoot && !isUpdatingChildComponent) {
           warn(
             `Avoid mutating a prop directly since the value will be ` +
@@ -188,6 +189,7 @@ function initComputed (vm: Component, computed: Object) {
   // $flow-disable-line
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
+  // 服务端渲染
   const isSSR = isServerRendering()
   // 遍历computed每一项
   for (const key in computed) {
@@ -204,6 +206,7 @@ function initComputed (vm: Component, computed: Object) {
 
     if (!isSSR) {
       // 不是服务端渲染的情况下，创建一个watcher实例，并保存到watchers中
+      // computed实际上就是通过watcher实现的，第四个参数是关键{ lazy: true }
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -267,15 +270,20 @@ export function defineComputed (
 }
 
 function createComputedGetter (key) {
+  // 返回一个computed的get函数
   return function computedGetter () {
+    // 获取对应computed的watcher实例
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
       if (watcher.dirty) {
+        // 如果依赖的数据发生了变化，通过调用watcher的update函数，吧dirty的值变为true，需要重洗计算值
         watcher.evaluate()
       }
       if (Dep.target) {
+        // 依赖收集
         watcher.depend()
       }
+      // 计算出来的值存储在value中
       return watcher.value
     }
   }
@@ -387,6 +395,7 @@ export function stateMixin (Vue: Class<Component>) {
   const propsDef = {}
   propsDef.get = function () { return this._props }
   if (process.env.NODE_ENV !== 'production') {
+    // 禁止给$data重新赋值
     dataDef.set = function () {
       warn(
         'Avoid replacing instance root $data. ' +
@@ -394,13 +403,16 @@ export function stateMixin (Vue: Class<Component>) {
         this
       )
     }
+    // $props只能是只读，不可设置
     propsDef.set = function () {
       warn(`$props is readonly.`, this)
     }
   }
+  // 挂载$data和$props属性到this上面
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 
+  // 实例函数
   Vue.prototype.$set = set
   Vue.prototype.$delete = del
 
@@ -426,6 +438,7 @@ export function stateMixin (Vue: Class<Component>) {
     options.user = true
     const watcher = new Watcher(vm, expOrFn, cb, options)
     if (options.immediate) {
+      // immediate会立刻触发回调函数
       const info = `callback for immediate watcher "${watcher.expression}"`
       pushTarget()
       invokeWithErrorHandling(cb, vm, [watcher.value], vm, info)

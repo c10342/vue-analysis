@@ -7,6 +7,7 @@ import { defineReactive, toggleObserving } from '../observer/index'
 export function initProvide (vm: Component) {
   const provide = vm.$options.provide
   if (provide) {
+    // 子组件通过_provided读取值
     vm._provided = typeof provide === 'function'
       ? provide.call(vm)
       : provide
@@ -14,10 +15,11 @@ export function initProvide (vm: Component) {
 }
 
 export function initInjections (vm: Component) {
+  // 获取规范格式后的inject对象
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
     // 把shouldObserve 置为false，
-    // 目的是为了告诉defineReactive函数仅仅把键值对加到当前实例，不需要转化为响应式
+    // 目的是为了告诉observe函数仅仅把键值对加到当前实例，不需要转化为响应式
     // 这也响应了的文档的，provide 和 inject 绑定并不是可响应的
     // 当然，如果传入了一个可监听的对象，那么该对象的属性还是可响应的
     toggleObserving(false)
@@ -25,6 +27,7 @@ export function initInjections (vm: Component) {
       /* istanbul ignore else */
       if (process.env.NODE_ENV !== 'production') {
         defineReactive(vm, key, result[key], () => {
+          // 禁止修改inject的值，如果inject的是对象，修改对象里面的属性不会报错
           warn(
             `Avoid mutating an injected value directly since the changes will be ` +
             `overwritten whenever the provided component re-renders. ` +
@@ -82,6 +85,7 @@ export function resolveInject (inject: any, vm: Component): ?Object {
       const provideKey = inject[key].from
       let source = vm
       while (source) {
+        // 父组件的provided数据会存储在_provided中
         if (source._provided && hasOwn(source._provided, provideKey)) {
           result[key] = source._provided[provideKey]
           break

@@ -22,9 +22,13 @@ function Vue (options) {
 
 // 按功能把扩展分散到多个模块中去实现，es6的class是难以实现的
 
+// 添加_init方法
 initMixin(Vue)
+// 添加$data和$props属性，$set，$delete和$watch函数
 stateMixin(Vue)
+// 添加$on，$once，$off，$emit函数
 eventsMixin(Vue)
+// 添加_update，$forceUpdate，$destroy函数
 lifecycleMixin(Vue)
 renderMixin(Vue)
 

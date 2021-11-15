@@ -614,7 +614,7 @@ export function createPatchFunction (backend) {
         // 清空dom中的子节点
         removeVnodes(oldCh, 0, oldCh.length - 1)
       } else if (isDef(oldVnode.text)) {
-        // 新旧vnode都没子节点，但是就vnode有文本节点
+        // 新旧vnode都没子节点，但是旧vnode有文本节点
         // 清空，旧vnode的文本
         nodeOps.setTextContent(elm, '')
       }

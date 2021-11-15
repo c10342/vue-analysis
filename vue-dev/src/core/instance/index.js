@@ -30,6 +30,7 @@ stateMixin(Vue)
 eventsMixin(Vue)
 // 添加_update，$forceUpdate，$destroy函数
 lifecycleMixin(Vue)
+// 添加$nextTick，_render函数
 renderMixin(Vue)
 
 export default Vue

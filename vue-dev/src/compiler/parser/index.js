@@ -75,6 +75,7 @@ export function createASTElement (
 
 /**
  * Convert HTML string to AST.
+ * 将模板转化为ast
  */
 export function parse (
   template: string,
@@ -284,6 +285,7 @@ export function parse (
         processRawAttrs(element)
       } else if (!element.processed) {
         // structural directives
+        // 指令
         processFor(element)
         processIf(element)
         processOnce(element)

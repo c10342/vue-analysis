@@ -110,24 +110,29 @@ export function addHandler (
 
   // check capture modifier
   if (modifiers.capture) {
+    // 判断是否有capture修饰符
     delete modifiers.capture
     name = prependModifierMarker('!', name, dynamic)
   }
   if (modifiers.once) {
+    // 判断是否有once修饰符
     delete modifiers.once
     name = prependModifierMarker('~', name, dynamic)
   }
   /* istanbul ignore if */
   if (modifiers.passive) {
+    // 判断是否有passive修饰符
     delete modifiers.passive
     name = prependModifierMarker('&', name, dynamic)
   }
 
   let events
   if (modifiers.native) {
+    // 浏览器原生事件
     delete modifiers.native
     events = el.nativeEvents || (el.nativeEvents = {})
   } else {
+    // 自定义事件
     events = el.events || (el.events = {})
   }
 

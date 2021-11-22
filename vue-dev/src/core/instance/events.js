@@ -9,14 +9,15 @@ import {
 } from '../util/index'
 import { updateListeners } from '../vdom/helpers/index'
 
+// 父组件给子组件的注册事件中，把自定义事件传给子组件，在子组件实例化的时候进行初始化；而浏览器原生事件是在父组件中处理。
 export function initEvents (vm: Component) {
   vm._events = Object.create(null)
   vm._hasHookEvent = false
   // init parent attached events
-  // 获取父组件v-on监听器
+  // 获取父组件v-on监听器事件
   const listeners = vm.$options._parentListeners
   if (listeners) {
-    // 将父组件向子组件注册的事件注册到子组件的实例中
+    // 将父组件向子组件注册的事件添加到子组件实例的_events中
     updateComponentListeners(vm, listeners)
   }
 }
@@ -47,6 +48,7 @@ export function updateComponentListeners (
   oldListeners: ?Object
 ) {
   target = vm
+  // 对比新旧事件监听器，看看那些是需要新增，那些是需要卸载
   updateListeners(listeners, oldListeners || {}, add, remove, createOnceHandler, vm)
   target = undefined
 }

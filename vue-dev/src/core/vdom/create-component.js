@@ -177,9 +177,13 @@ export function createComponent (
 
   // extract listeners, since these needs to be treated as
   // child component listeners instead of DOM listeners
+  // 提取侦听器，因为这些侦听器需要被视为子组件侦听器，而不是DOM侦听器
+  // 对于自定义事件，会把 listeners 作为 vnode 的 componentOptions 传入，放在子组件初始化阶段中处理， 在子组件的初始化的时候， 拿到了父组件传入的 listeners，然后在执行 initEvents 的过程中，会处理这个 listeners
   const listeners = data.on
   // replace with listeners with .native modifier
   // so it gets processed during parent component patch.
+  // 替换为带有.native修饰符的侦听器，以便在父组件修补程序期间对其进行处理。
+  // 原生浏览器事件是在父组件中处理的
   data.on = data.nativeOn
 
   if (isTrue(Ctor.options.abstract)) {

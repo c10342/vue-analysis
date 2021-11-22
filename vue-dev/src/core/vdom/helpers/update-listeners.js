@@ -50,6 +50,7 @@ export function createFnInvoker (fns: Function | Array<Function>, vm: ?Component
   return invoker
 }
 
+// 对比新旧事件监听器，看看那些是需要新增，那些是需要卸载
 export function updateListeners (
   on: Object,
   oldOn: Object,

@@ -75,7 +75,8 @@ export function initMixin (Vue: Class<Component>) {
     vm._self = vm
     // 初始化生命周期：挂载一些属性，$parent,$root,$children等
     initLifecycle(vm)
-    // 初始化事件相关：将父组件向子组件注册的事件注册到子组件的实例中
+    // 初始化事件相关：将父组件向子组件注册的事件添加到子组件实例的_events中
+    // 初始化事件函数initEvents实际上初始化的是父组件在模板中使用v-on或@注册的监听子组件内触发的事件。
     initEvents(vm)
     // 初始化渲染相关的：$slots，$scopedSlots，createElement，$attrs，$listeners等数据
     initRender(vm)
@@ -83,7 +84,7 @@ export function initMixin (Vue: Class<Component>) {
     callHook(vm, 'beforeCreate')
     // 初始化inject
     initInjections(vm) // resolve injections before data/props
-    // 初始化data，props，methods，computed，watch
+    // 初始化props，methods，data，computed，watch
     initState(vm)
     // 初始化provide
     initProvide(vm) // resolve provide after data/props

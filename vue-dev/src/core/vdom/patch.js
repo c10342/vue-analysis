@@ -469,16 +469,20 @@ export function createPatchFunction (backend) {
         newStartVnode = newCh[++newStartIdx]
       } else {
         // 不属于以上四种情况，常规循环对比
+        // 获取旧孩子节点的key值跟下标索引值的对应关系，oldKeyToIdx会被缓存
         if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx)
         // 根据key值找索引
+        // 如果新前存在key值，则根据key值，去查找，旧孩子节点中是否存在相同的key值节点，并拿到下标索引值
+        // 如果key值不存在，则通过for循环去查找新前节点在旧孩子节点中是否存在相同的节点，并拿到下标索引值
         idxInOld = isDef(newStartVnode.key)
           ? oldKeyToIdx[newStartVnode.key]
           : findIdxInOld(newStartVnode, oldCh, oldStartIdx, oldEndIdx)
-        if (isUndef(idxInOld)) { // New element
+        if (isUndef(idxInOld)) {
+          // 如果找不到新前在旧孩子节点的下标索引值，说明是新增的节点
           // 在旧vnode中找不到新vnode的子节点，则新增
           createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)
         } else {
-          // 在旧vnode中找到了新vnode的子节点
+          // 如果找到了新前在旧孩子节点的下标索引值，还需要进一步判断是否为相同的节点
           vnodeToMove = oldCh[idxInOld]
           if (sameVnode(vnodeToMove, newStartVnode)) {
             // 如果两个节点是相同节点

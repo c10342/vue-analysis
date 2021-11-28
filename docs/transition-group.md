@@ -1,0 +1,20 @@
+
+## render函数
+
+`transition-group`组件是非抽象组件，它会渲染成一个真实的的元素，默认是span。然后定义了几个变量。prevchildren是用来存储上一次的节点，children是用来存储当前的子节点，然后获取默认插槽的内容，并存储在rawchildren中，把transition-group组件上提取出来的一些渲染数据保存到transitionData中
+
+遍历rawchildren，检查每个子节点是否存在key值，如果存在key值，就把当前子节点存放到children数组中，然后给当前节点添加transition属性，值为`transition-group`组件提取出来的过渡动画数据，这点很关键，只有这样子才能实现列表的单个元素过渡动画，跟transition组件一样
+
+然后就是遍历prevchildren，获取每一个Vnode，然后把transitionData赋值给Vnode的transition属性，这个是为了当他在enter和leave的钩子函数中有过渡动画。然后调用了原生DOM的getBoundingClientRect 方法获取到原生DOM的位置信息，并记录在pos属性中
+
+最后调用h函数渲染出Vnode，标签名默认是span，孩子节点就是上面的children数组
+
+实际上跟transition组件的实现是类似的，不同是transition-group组件会，拿到所有的子节点，循环遍历每一个子节点，并给每一个子节点添加`transition`属性，然后还会记录节点的位置信息，最终还是转化为单个元素的过渡动画
+
+在render函数中，每次插入和删除元素的缓动动画是可以实现的。但是剩下的元素平移的过渡效果是实现不出来的，所以还需要在update钩子函数中实现move过渡效果
+
+## update 函数
+
+update钩子函数中，首先对prevchildren进行遍历，记录节点的新位置，然后计算节点的新位置和旧位置，如果差值不为0，说明这些节点是需要移动的，并把节点的moved属性标识为true，并且通过设置`transform`样式把需要移动的节点的位置偏移到之前的旧位置，目的是为了move缓动做准备
+
+然后通过读取`document.body.offsetHeight`属性值，强制触发浏览器重绘，接着再次对prevchildren进行遍历，先给子节点添加moveclass过渡样式类（比如说这个样式类就是设置了transitions的过渡时间为1s），接着把子节点的`transform`样式设置为空，由于之前我们已经把这些节点偏移到旧的位置了，所以`transform`样式设置为空后，子节点会从旧的位置按照我们设置的moveclass过度样式类，也就是1s的缓动时间过渡偏移到它当前的位置，这样子就实现了move的过渡动画。最后会监听transitionEndEvent 过渡结束事件，做一些清理操作

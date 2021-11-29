@@ -150,6 +150,7 @@ function genDefaultModel (
     }
   }
 
+  // 处理修饰符
   const { lazy, number, trim } = modifiers || {}
   const needCompositionGuard = !lazy && type !== 'range'
   const event = lazy
@@ -170,7 +171,8 @@ function genDefaultModel (
   if (needCompositionGuard) {
     code = `if($event.target.composing)return;${code}`
   }
-
+  // 这实际上就是 input 实现 v-model 的精髓
+  // 通过修改ast元素，给el添加一个prop，相当于我们在input上动态绑定了value，，有个el添加了添加事件处理，相当于在input上绑定了input事件
   addProp(el, 'value', `(${value})`)
   addHandler(el, event, code, null, true)
   if (trim || number) {

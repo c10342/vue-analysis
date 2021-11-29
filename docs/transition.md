@@ -1,0 +1,26 @@
+# transition
+
+1、在vnode patch过程中，会有很多的钩子函数，transition组件就是借助了create，activate和remove 钩子函数来执行过渡动画
+
+2、过渡动画提供了2个时机，一个是create和activate钩子函数提供entering进入动画，一个是remove钩子函数提供leaving动画
+
+3、transition组件只是在render阶段获取一些数据，并且返回了vnode，并没有任何和动画相关的逻辑
+
+render函数
+
+首先在transition组件的render函数中，先获取默认的插槽的子节点，如果不存在就返回，如果节点的长度大于一就会警告报错，因为transition组件只能包裹一个元素。然后检查mode是否合法，mode支持`in-out`和`out-in`。然后如果组件的根节点是transition，并且外面包裹组件的容器也是transition，就要跳过。然后获取第一个非抽象的节点，如果不存在就退出。存在就给子节点添加一个key值，接着再从组件实例上面提取出过度所需要的数据，并保存在`data.transition`字段中。到此就完成了过度数据的处理和搜集
+
+在进入阶段。首先根据transition组件上面的name属性生成一个用来描述各个阶段的class名称对象，比如`v-enter`，`v-enter-to`等类名。然后定义过度的类名，startclass定义的是过度的开始状态，在元素被插入是生效，在下一帧移除。activeclass定义过度的状态，在整个过度过程中作用，在元素被插入时生效，在transition/animation完成之后移除。toclass定义的是过度结束的状态，在元素被出入一帧后生效，与此同时startclass被删除，在transition/animation 完成之后移除。然后还定义了一些钩子函数，beforeEnterHook是过度开始前执行的，enterHook是元素插入后或者v-show显示切换后执行的，afterEnterHook是过度动画执行完成之后执行的。
+
+然后就是合并vnode patch过程中的insert钩子函数。当组件被插入之后，就会执行我们定义的`enterHook`了
+
+接着就是开始执行过度动画，首先执行beforeEnterHook钩子函数，然后给DOM元素添加开始状态类名和过度状态类名，紧接着借助requestAnimationFrame或者setTimeout，在下一帧之后移除开始状态的类名，在过度没有被取消的情况下，给DOM元素添加结束状态的类名。最后如果用户是通过enterHook钩子函数控制动画的，就通过定时器来执行`afterEnterHook`钩子函数，如果是通过css来控制过度的，就监听`transitionEndEvent`或者`animationEndEvent`事件来移除结束状态类名和过度状态类名
+
+
+在离开阶段，实际上跟进入阶段的实现几乎是一个镜像过程。不同的是从data中解析出来的样式类名和钩子函数，在离开过度动画执行完毕之后，会把节点从DOM中移除
+
+
+所以总结起来vue的过度实现可以分为一下几个步骤：
+1、检测目标元素是否应用了css过度动画，如果是，就在合适的时机添加或者删除css类名
+2、如果提供了钩子函数，这些钩子函数将会在合适的时机被调用
+3、如果没有检测到钩子函数或者css过度动画，DOM操作会立即执行

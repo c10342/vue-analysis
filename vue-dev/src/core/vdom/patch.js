@@ -757,8 +757,12 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // 1、新节点不存在，老节点存在，调用destroy，销毁老节点
+  // 2、oldvnode是真实元素，表示首次渲染，创建节点，并插入
+  // 3、如果oldvnode不是真实元素，标识更新阶段，执行patchvnode
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
     if (isUndef(vnode)) {
+      // 新的vnode不存在但是老的vnode存在，销毁老节点
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return
     }
@@ -767,16 +771,19 @@ export function createPatchFunction (backend) {
     const insertedVnodeQueue = []
 
     if (isUndef(oldVnode)) {
-      // empty mount (likely as component), create new root element
+      // 新vnode存在但是老的vnode不存在，创建元素
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
     } else {
+      // 新vnode存在并且就的vnode也存在
       const isRealElement = isDef(oldVnode.nodeType)
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
         // patch existing root node
+        // 新老节点相同，调用patchvnode精细化对比
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
       } else {
         if (isRealElement) {
+          // 是真实元素，渲染根组件
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
           // a successful hydration.
@@ -804,10 +811,13 @@ export function createPatchFunction (backend) {
         }
 
         // replacing existing element
+        // 获取老节点的真实元素
         const oldElm = oldVnode.elm
+        // 获取老节点的父元素
         const parentElm = nodeOps.parentNode(oldElm)
 
         // create new node
+        // 基于新vnode创建整个dom树，并插入
         createElm(
           vnode,
           insertedVnodeQueue,
@@ -849,6 +859,7 @@ export function createPatchFunction (backend) {
         }
 
         // destroy old node
+        // 移除老节点
         if (isDef(parentElm)) {
           removeVnodes([oldVnode], 0, 0)
         } else if (isDef(oldVnode.tag)) {

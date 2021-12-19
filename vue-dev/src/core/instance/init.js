@@ -73,9 +73,9 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    // 初始化生命周期：挂载一些属性，$parent,$root,$children等
+    // 初始化组件实例关系属性：挂载一些属性，$parent,$root,$children等
     initLifecycle(vm)
-    // 初始化事件相关：将父组件向子组件注册的事件添加到子组件实例的_events中
+    // 初始化自定义事件：将父组件向子组件注册的事件添加到子组件实例的_events中
     // 初始化事件函数initEvents实际上初始化的是父组件在模板中使用v-on或@注册的监听子组件内触发的事件。
     initEvents(vm)
     // 初始化渲染相关的：$slots，$scopedSlots，createElement，$attrs，$listeners等数据

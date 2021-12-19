@@ -13,6 +13,14 @@
 
 # patch 过程
 
+流程：
+
+- 新的vnode不存在但是老的vnode存在，销毁老节点
+
+- 新vnode存在但是老的vnode不存在，创建元素
+
+- 新vnode存在并且旧的vnode也存在，如果旧vnode是真实元素，表示首次渲染，创建节点并插入，否则调用patchVnode函数进行精细化对比
+
 核心：以新的VNode为基准，改造旧的VNode，使之成为跟新的VNode一样，这就是patch过程要干的事情
 
 三件事：
